@@ -2,10 +2,9 @@ namespace DesafioFundamentos.Models
 {
     public class Estacionamento
     {
-        
         private decimal precoInicial = 0;
         private decimal precoPorHora = 0;
-        private List<string> veiculos = new List<string>();
+        private List<VeiculoEstacionado> veiculos = new List<VeiculoEstacionado>();
 
         public Estacionamento(decimal precoInicial, decimal precoPorHora)
         {
@@ -15,11 +14,11 @@ namespace DesafioFundamentos.Models
 
         public void AdicionarVeiculo()
         {
-           string placa = Console.ReadLine();
+            string placa = Console.ReadLine();
 
-            if (!veiculos.Contains(placa))
+            if (!veiculos.Any(x => x.Placa.ToUpper() == placa.ToUpper()))
             {
-                veiculos.Add(placa);
+                veiculos.Add(new VeiculoEstacionado(placa, DateTime.Now));
                 Console.WriteLine($"Veículo com placa {placa} estacionado com sucesso!");
             }
             else
@@ -30,23 +29,26 @@ namespace DesafioFundamentos.Models
 
         public void RemoverVeiculo()
         {
-           Console.WriteLine("Digite a placa do veículo para remover:");
+            Console.WriteLine("Digite a placa do veículo para remover:");
             string placa = Console.ReadLine();
 
-            if (veiculos.Any(x => x.ToUpper() == placa.ToUpper()))
-            {
-                Console.WriteLine("Digite a quantidade de horas que o veículo permaneceu estacionado:");
-                if (int.TryParse(Console.ReadLine(), out int horas))
-                {
-                    decimal valorTotal = precoInicial + precoPorHora * horas;
+            VeiculoEstacionado veiculo = veiculos.FirstOrDefault(x => x.Placa.ToUpper() == placa.ToUpper());
 
-                    veiculos.Remove(placa);
+            if (veiculo != null)
+            {
+                Console.WriteLine("Digite a hora de saída (formato HH:mm):");
+                if (DateTime.TryParseExact(Console.ReadLine(), "HH:mm", null, System.Globalization.DateTimeStyles.None, out DateTime horaSaida))
+                {
+                    TimeSpan tempoEstacionado = horaSaida - veiculo.HoraEntrada;
+                    decimal valorTotal = precoInicial + (precoPorHora * (decimal)tempoEstacionado.TotalHours);
+
+                    veiculos.Remove(veiculo);
 
                     Console.WriteLine($"O veículo {placa} foi removido e o preço total foi de: R$ {valorTotal}");
                 }
                 else
                 {
-                    Console.WriteLine("Digite um valor válido para a quantidade de horas.");
+                    Console.WriteLine("Digite uma hora válida no formato HH:mm.");
                 }
             }
             else
@@ -54,23 +56,21 @@ namespace DesafioFundamentos.Models
                 Console.WriteLine("Desculpe, esse veículo não está estacionado aqui. Confira se digitou a placa corretamente");
             }
         }
-
         public void ListarVeiculos()
         {
             if (veiculos.Any())
             {
                 Console.WriteLine("Os veículos estacionados são:");
-                foreach (var placa in veiculos)
+                foreach (var veiculo in veiculos)
                 {
-                    Console.WriteLine(placa);
-                    
+                    Console.WriteLine($"{veiculo.Placa} - Estacionado em: {veiculo.HoraEntrada}");
                 }
             }
             else
             {
                 Console.WriteLine("Não há veículos estacionados.");
             }
-            //Adicionar novos metodos 
         }
     }
 }
+
